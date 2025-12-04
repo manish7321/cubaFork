@@ -1,0 +1,35 @@
+.main-page {
+  background: white;
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.main-page ion-content::part(scroll)::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.main-page ion-content::part(scroll) {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+.school-list {
+  overflow-y: auto;
+  padding-top: 10px;
+}
+.fixed-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  width: 100%;
+}
+.school-div {
+  font-size: clamp(20px, 5vh, 30px);
+  color: grey;
+  padding: 20px 20px 0 20px;
+}
+.content-background {
+  --background: white;
+}

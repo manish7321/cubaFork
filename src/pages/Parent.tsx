@@ -1,0 +1,532 @@
+import { useEffect, useRef, useState } from "react";
+import "./Parent.css";
+import {
+  CLASS,
+  EDIT_STUDENTS_MAP,
+  LANGUAGE,
+  MAX_STUDENTS_ALLOWED,
+  MODES,
+  PAGES,
+  PARENTHEADERLIST,
+  SCHOOL,
+  TableTypes,
+  USER_DATA,
+} from "../common/constants";
+import ProfileCard from "../components/parent/ProfileCard";
+import User from "../models/user";
+import ToggleButton from "../components/parent/ToggleButton";
+
+// import LeftTitleRectangularIconButton from "../components/parent/LeftTitleRectangularIconButton";
+import {
+  EmailIcon,
+  EmailShareButton,
+  FacebookIcon,
+  TwitterIcon,
+  WhatsappIcon,
+} from "react-share";
+import { FaInstagramSquare } from "react-icons/fa";
+import { t } from "i18next";
+import { TfiWorld } from "react-icons/tfi";
+import i18n from "../i18n";
+import { ServiceConfig } from "../services/ServiceConfig";
+import ParentLogout from "../components/parent/ParentLogout";
+import { Box } from "@mui/material";
+import { useHistory } from "react-router-dom";
+import CustomAppBar from "../components/studentProgress/CustomAppBar";
+import { Util } from "../utility/util";
+import { schoolUtil } from "../utility/schoolUtil";
+import DropDown from "../components/DropDown";
+import { RoleType } from "../interface/modelInterfaces";
+import DeleteParentAccount from "../components/parent/DeleteParentAccount";
+import DialogBoxButtons from "../components/parent/DialogBoxButtons​";
+import DebugMode from "../teachers-module/components/DebugMode";
+import { Capacitor } from "@capacitor/core";
+// import { EmailComposer } from "@ionic-native/email-composer";
+// import Share from "react";
+const Parent: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentHeader, setCurrentHeader] = useState<any>(undefined);
+  const [soundFlag, setSoundFlag] = useState<number>();
+  const [musicFlag, setMusicFlag] = useState<number>();
+  const [userProfile, setUserProfile] = useState<TableTypes<"user">[]>([]);
+  const [tabIndex, setTabIndex] = useState<any>();
+  // Commented out because Debug Mode has been moved to the Leaderboard page
+  // const clickCount = useRef(0);
+  // const [showDialogBox, setShowDialogBox] = useState(false);
+  // const [showDebug, setShowDebug] = useState(false);
+  const [langList, setLangList] = useState<
+    {
+      id: string;
+      displayName: string;
+    }[]
+  >([]);
+  const [langDocIds, setLangDocIds] = useState<Map<string, string>>(new Map());
+  const [currentAppLang, setCurrentAppLang] = useState<string>();
+  //  const [localLangDocId, setLocalLangDocId] = useState<any>();
+  const [reloadProfiles, setReloadProfiles] = useState<boolean>(false);
+  const [studentMode, setStudentMode] = useState<string | undefined>();
+  const [currentUser, setCurrentUser] = useState<
+    TableTypes<"user"> | undefined
+  >();
+  const [schools, setSchools] = useState<
+    {
+      school: TableTypes<"school">;
+      role: RoleType;
+    }[]
+  >();
+  let tempLangList: {
+    id: string;
+    displayName: string;
+  }[] = [];
+  // let langDocIds: Map<string, string> = new Map();
+  const localAppLang = localStorage.getItem(LANGUAGE);
+  const api = ServiceConfig.getI().apiHandler;
+  const history = useHistory();
+  const parentHeaderIconList = [
+    { header: "profile", displayName: "Profile" },
+    { header: "setting", displayName: "Setting" },
+    { header: "help", displayName: "Help" },
+    { header: "faq", displayName: "FAQ" },
+  ];
+  const [tabs, setTabs] = useState({});
+  const localSchool = JSON.parse(localStorage.getItem(SCHOOL)!);
+  const localClass = JSON.parse(localStorage.getItem(CLASS)!);
+  useEffect(() => {
+    setIsLoading(true);
+    setCurrentHeader(PARENTHEADERLIST.PROFILE);
+    init();
+    getStudentProfile();
+  }, [reloadProfiles]);
+
+  async function getStudentProfile() {
+    const userProfilePromise: TableTypes<"user">[] =
+      await ServiceConfig.getI().apiHandler.getParentStudentProfiles();
+    let finalUser: any[] = [];
+    const storedMapStr = sessionStorage.getItem(EDIT_STUDENTS_MAP);
+    const mergedStudents = Util.mergeStudentsByUpdatedAt(
+      userProfilePromise,
+      storedMapStr
+    );
+    for (let i = 0; i < MAX_STUDENTS_ALLOWED; i++) {
+      finalUser.push(mergedStudents[i]);
+    }
+    setUserProfile(finalUser);
+  }
+  async function init(): Promise<void> {
+    const parentUser = await ServiceConfig.getI().authHandler.getCurrentUser();
+    if (parentUser) {
+      setCurrentUser(parentUser);
+      const schools = await api.getSchoolsForUser(parentUser.id);
+      if (schools && schools.length > 0) {
+        setSchools(schools);
+      }
+      const currMode = await schoolUtil.getCurrMode();
+      setStudentMode(currMode);
+      const sound = Util.getCurrentSound();
+      const music = Util.getCurrentMusic();
+      setSoundFlag(sound);
+      setMusicFlag(music);
+
+      const allLang = await ServiceConfig.getI().apiHandler.getAllLanguages();
+      let tempLangDocIds: Map<string, string> = new Map();
+      let keytempLangDocIds: Map<string, string> = new Map();
+      for (let i = 0; i < allLang.length; i++) {
+        const element = allLang[i];
+
+        tempLangList.push({
+          id: element.id,
+          displayName: element.name,
+        });
+        tempLangDocIds.set(element.name, element.id);
+        keytempLangDocIds.set(element.id, element.name);
+      }
+
+      setLangDocIds(tempLangDocIds);
+      setLangList(tempLangList);
+
+      const element = allLang.find((obj) => obj.code === localAppLang);
+      if (!element) return;
+
+      setCurrentAppLang(element.id);
+
+      setIsLoading(false);
+    }
+  }
+
+  function onHeaderIconClick(selectedHeader: any) {
+    setCurrentHeader(selectedHeader);
+  }
+
+  function profileUI() {
+    // setIsLoading(false);
+
+    return (
+      <div id="parent-page-profile">
+        {userProfile.map((element) => {
+          let studentUserType: boolean = true;
+          if (element === undefined) {
+            studentUserType = false;
+          }
+          return (
+            <ProfileCard
+              width={"27vw"}
+              height={"50vh"}
+              userType={studentUserType}
+              user={element}
+              showText={true}
+              setReloadProfiles={setReloadProfiles}
+              profiles={userProfile}
+              studentCurrMode={studentMode}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
+  function settingUI() {
+    return (
+      <div>
+        <div id="parent-page-setting">
+          <div id="parent-page-setting-div">
+            <p id="parent-page-setting-lang-text">{t("Language")}</p>
+            <DropDown
+              currentValue={currentAppLang}
+              optionList={langList}
+              placeholder=""
+              width="26vw"
+              onValueChange={async (selectedLangDocId) => {
+                // setIsLoading(true);
+
+                const api = ServiceConfig.getI().apiHandler;
+                const auth = ServiceConfig.getI().authHandler;
+                // api.deleteAllUserData
+                // const langDoc = await api.getLanguageWithId(selectedLangDocId);
+                const allLang = await api.getAllLanguages();
+
+                const langDoc = allLang.find(
+                  (obj) => obj.id === selectedLangDocId
+                );
+
+                if (!langDoc) return;
+                localStorage.setItem(LANGUAGE, langDoc.code ?? "");
+                await i18n.changeLanguage(langDoc.code ?? "");
+                const currentUser = await auth.getCurrentUser();
+                setTabIndex(t(parentHeaderIconList[1].header));
+
+                const langId = langDocIds.get(langDoc.code ?? "");
+
+                if (currentUser && selectedLangDocId) {
+                  api.updateLanguage(currentUser.id, selectedLangDocId);
+                }
+                setCurrentAppLang(selectedLangDocId);
+                const updatedUserData: TableTypes<"user"> | undefined =
+                  currentUser
+                    ? { ...currentUser, language_id: selectedLangDocId }
+                    : undefined;
+                localStorage.setItem(
+                  USER_DATA,
+                  JSON.stringify(updatedUserData)
+                );
+                if (updatedUserData) {
+                  auth.currentUser = updatedUserData;
+                }
+                // window.location.reload();
+              }}
+            />
+          </div>
+          <div id="parent-page-setting-div">
+            <ToggleButton
+              flag={soundFlag!}
+              title={t("Sound")}
+              onIonChangeClick={async (v) => {
+                setSoundFlag(v.detail?.checked ? 0 : 1);
+                const currentUser =
+                  await ServiceConfig.getI().authHandler.getCurrentUser();
+                Util.setCurrentSound(v.detail?.checked ? 0 : 1);
+                if (currentUser) {
+                  ServiceConfig.getI().apiHandler.updateSoundFlag(
+                    currentUser.id,
+                    v.detail?.checked
+                  );
+                }
+                // Commented out because Debug Mode has been moved to the Leaderboard page
+                // clickCount.current += 1;
+                // // If clicked 7 times, show popup for debug mode
+                // if (clickCount.current === 7) {
+                //   setShowDialogBox(true);
+                //   clickCount.current = 0;
+                // }
+              }}
+            ></ToggleButton>
+            {/* Commented out because Debug Mode has been moved to the Leaderboard page */}
+            {/* {showDialogBox && (
+              <DialogBoxButtons
+                width={"40vw"}
+                height={"30vh"}
+                message={t("Do you want to Open Debug Mode?")}
+                showDialogBox={true}
+                yesText={t("Cancel")}
+                noText={t("debugMode")}
+                handleClose={() => {
+                  setShowDialogBox(true);
+                }}
+                onYesButtonClicked={() => {
+                  setShowDialogBox(false);
+                }}
+                onNoButtonClicked={() => {
+                  setShowDebug(true);
+                  parentHeaderIconList.push({
+                    header: "debugMode",
+                    displayName: t("debugMode"),
+                  });
+
+                  setTabs((prevTabs: any) => ({
+                    ...prevTabs,
+                    [t("debugMode")]: t("debugMode"),
+                  }));
+                  setTabIndex(t("debugMode"));
+                  setShowDialogBox(false);
+                }}
+              />
+            )} */}
+
+            <ToggleButton
+              flag={musicFlag!}
+              title={t("Music")}
+              onIonChangeClick={async (v) => {
+                setMusicFlag(v.detail?.checked ? 0 : 1);
+                const currentUser =
+                  await ServiceConfig.getI().authHandler.getCurrentUser();
+                Util.setCurrentMusic(v.detail?.checked ? 0 : 1);
+                if (currentUser) {
+                  ServiceConfig.getI().apiHandler.updateMusicFlag(
+                    currentUser.id,
+                    v.detail?.checked
+                  );
+                }
+              }}
+            ></ToggleButton>
+          </div>
+        </div>
+        <div id="logout-delete-button">
+          <div id="parent-logout">
+            <ParentLogout />
+          </div>
+          <div id="parent_logout-btn">
+            <DeleteParentAccount />
+          </div>
+          <div className="parent-teachermode-toggle">
+            <ToggleButton
+              title={"Switch to Teacher's Mode"}
+              layout="vertical"
+              onIonChangeClick={async () => {
+                schoolUtil.setCurrMode(MODES.TEACHER);
+                history.replace(PAGES.DISPLAY_SCHOOLS);
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function helpUI() {
+    return (
+      <div id="parent-page-help">
+        <h1 id="parent-page-help-title">{t("Chimple Help Desk")}</h1>
+        <div id="parent-page-help-title-container">
+          <div id="parent-page-help-title-link">
+            <div id="parent-page-help-title-e1">
+              <div id="parent-page-help-share-button">
+                <EmailShareButton
+                  url={"help@sutara.org"}
+                  subject={"Chimple Kids app- Help Desk"}
+                  body=""
+                  className="Demo__some-network__share-button"
+                >
+                  {/* Email Us */}
+                  {t("Email Us")}
+                </EmailShareButton>
+                <EmailIcon size={"2vw"} round />
+              </div>
+              <div
+                id="parent-page-help-share-button"
+                onClick={() => {
+                  window.open("https://www.chimple.org/", "_system");
+                }}
+              >
+                {/* Visit Website */}
+                {t("Visit Website")}
+                <TfiWorld size={"2vw"} />
+                {/* <IonIcon name="globe-outline" size={"2vw"}></IonIcon> */}
+              </div>
+              <div
+                id="parent-page-help-share-button"
+                onClick={() => {
+                  let message = "Hiii !!!!";
+                  window.open(
+                    `https://api.whatsapp.com/send?phone=919606018552&text=${message}`,
+                    "_system"
+                  );
+                }}
+              >
+                {/* <WhatsappShareButton
+              // https://api.whatsapp.com/send?phone=917981611434&text=${message}
+              url={"send?phone=917981611434&"}
+              title={"hi"}
+              className="Demo__some-network__share-button"
+            >
+              WhatsApp Us
+            </WhatsappShareButton> */}
+                {/* WhatsApp Us */}
+                {t("WhatsApp Us")}
+                <WhatsappIcon size={"2vw"} round />
+              </div>
+            </div>
+            <div id="parent-page-help-title-e2">
+              <div id="help">{t("Help Video")}</div>
+              <div id="parent-page-help-title-e2-video">
+                <iframe
+                  id="parent-page-help-title-e2-video-youtude"
+                  className="embed-responsive-item"
+                  allowFullScreen={true}
+                  // width="50%"
+                  // height="50%"
+                  src="https://www.youtube.com/embed/Ez9oouE2pOE"
+                  title="YouTube video player"
+                  // frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  // allowfullscreen
+                ></iframe>
+              </div>
+            </div>
+            <div id="parent-page-help-title-e3">
+              <div
+                id="parent-page-help-share-button-e3"
+                onClick={() => {
+                  // let message = "Hiii !!!!";
+                  window.open(
+                    `https://api.instagram.com/chimple_learning/`,
+                    "_system"
+                  );
+                  // https://api.instagram.com/chimple_learning/
+
+                  // instagram://user?username=its_mee_skanda
+                }}
+              >
+                {/* Instagram */}
+                {t("Instagram")}
+                <FaInstagramSquare size={"2vw"} />
+              </div>
+              <div
+                id="parent-page-help-share-button-e3"
+                onClick={() => {
+                  // let message = "Hiii !!!!";
+                  window.open(`https://www.facebook.com/chimple`, "_system");
+                }}
+              >
+                {/* <FacebookShareButton
+              url={"https://www.facebook.com/chimple"}
+              quote={"Chimple Learning"}
+              className="Demo__some-network__share-button"
+            >
+              Fackbook
+            </FacebookShareButton> */}
+                {/* Facebook */}
+                {t("Facebook")}
+                <FacebookIcon size={"2vw"} round />
+              </div>
+              <div
+                id="parent-page-help-share-button-e3"
+                onClick={() => {
+                  // let message = "Hiii !!!!";
+                  window.open(`https://twitter.com/chimple_org`, "_system");
+                }}
+              >
+                {/* <TwitterShareButton
+              url={"https://twitter.com/chimple_org"}
+              title={"Chimple Learning"}
+              className="Demo__some-network__share-button"
+            >
+              Twitter
+            </TwitterShareButton> */}
+                {/* Twitter */}
+                {t("Twitter")}
+                <TwitterIcon size={"2vw"} round />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  function faqUI() {
+    return (
+      <div
+        id="faq-page"
+        onClick={() => {
+          window.open(
+            "https://www.chimple.org/in-school-guide-for-teachers",
+            "_system"
+          );
+        }}
+      >
+        <p>{t("Please Visit Our Website")}</p>
+        <TfiWorld size={"3vw"} />
+      </div>
+    );
+  }
+
+  // function debugModeUI() {
+  //   return <DebugMode />;
+  // }
+  const handleChange = (newValue: string) => {
+    const selectedHeader = parentHeaderIconList.find(
+      (item) => item.header === newValue
+    );
+    if (selectedHeader) {
+      setCurrentHeader(selectedHeader.header);
+    }
+    setTabIndex(newValue);
+  };
+
+  const handleBackButton = () => {
+    Util.setPathToBackButton(PAGES.DISPLAY_STUDENT, history);
+  };
+
+  useEffect(() => {
+    if (!tabIndex && parentHeaderIconList.length > 0) {
+      setTabIndex(t(parentHeaderIconList[0].header));
+    }
+  }, []);
+  useEffect(() => {
+    const updatedTabs = {};
+    parentHeaderIconList.forEach((item) => {
+      updatedTabs[t(item.header)] = t(item.header);
+    });
+    setTabs(updatedTabs);
+  }, [localAppLang]);
+
+  return (
+    <Box>
+      <div>
+        <CustomAppBar
+          tabs={tabs}
+          value={tabIndex}
+          onChange={handleChange}
+          handleBackButton={handleBackButton}
+          customStyle={true}
+        />
+        {tabIndex === t("profile") && <div>{profileUI()}</div>}
+        {tabIndex === t("setting") && <div>{settingUI()}</div>}
+        {tabIndex === t("help") && <div>{helpUI()}</div>}
+        {tabIndex === t("faq") && <div>{faqUI()}</div>}
+        {/* Commented out because Debug Mode has been moved to the Leaderboard pagex */}
+        {/* {tabIndex === t("debugMode") && <div>{debugModeUI()}</div>} */}
+      </div>
+    </Box>
+  );
+};
+
+export default Parent;

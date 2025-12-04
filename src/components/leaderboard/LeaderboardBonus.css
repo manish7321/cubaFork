@@ -1,0 +1,37 @@
+.leaderboard-bonus-container {
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 20% 20% 20%;
+  gap: 16px;
+  height: 100%;
+  flex-grow: 1;
+  justify-content: space-around;
+}
+.lost-bonus {
+  filter: grayscale(2);
+}
+.leaderboard-bonus-item {
+  text-align: center;
+  opacity: 1;
+}
+
+.leaderboard-bonus-disabled {
+  opacity: 0.2;
+}
+.leaderboard-bonus-page {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.leaderboard-bonus-section {
+  padding: 20px;
+}
+
+.section-divider {
+  border: 1px solid lightslategray;
+  height: 1px;
+  width: 100%;
+  color: black;
+}

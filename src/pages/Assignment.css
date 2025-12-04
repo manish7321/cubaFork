@@ -1,0 +1,92 @@
+.assignment-main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* background: var(--ion-background-color); */
+}
+
+.assignment-loading {
+  height: 100%;
+}
+
+.assignment-main-join-class {
+  display: flex;
+  flex-direction: column;
+  height: 110vh;
+  /* background: var(--ion-background-color); */
+  font-weight: bold;
+}
+
+.lesson-body {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  color: var(--text-color);
+}
+
+.classname-header {
+  font-size: clamp(18px, 3.1vh, 25px);
+  font-weight: bold;
+}
+
+.assignment-body {
+  /* margin-top: 10vh; */
+  position: relative;
+  bottom: 2%;
+}
+
+.assignment-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: var(--margin);
+}
+
+.right-button {
+  width: 20vw;
+}
+
+.pending-assignment {
+  display: flex;
+  position: relative;
+  height: 100vh;
+  top: 14vh;
+}
+
+.school-class-header {
+  display: flex;
+  gap: 1vw;
+  /* padding-left: 42vw; */
+  color: black;
+}
+
+#assignment-back-button {
+  position: absolute;
+  margin: var(--margin);
+}
+
+.scroll-header {
+  overflow: scroll;
+  height: 100vh;
+}
+.dowload-homework-button {
+  background: #ffffffd9;
+  color: #05342f;
+  border-radius: 20px;
+  margin-top: 0px;
+}
+
+.dowload-homework-icon {
+  display: flex;
+  justify-content: end;
+  width: clamp(25px, 3vw, 28px);
+  height: clamp(15px, 3vh, 15px);
+}
+.download-homework-label {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-top: 0.5vh;
+}

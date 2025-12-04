@@ -1,0 +1,76 @@
+#home-header {
+  position: initial !important;
+  box-shadow: none !important;
+}
+
+div p {
+  margin: 0px;
+  color: var(--text-color);
+  text-align: center;
+}
+
+.no-lesson {
+  color: var(--text-color);
+  position: relative;
+  top: 25vh;
+}
+
+.no-played {
+  color: var(--text-color);
+  position: relative;
+  top: 25vh;
+}
+
+.slider-content {
+  height: 100%;
+}
+
+.space-between {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  text-align: center;
+  color: var(--text-color);
+}
+
+#home-leaderboard-button {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-size: var(--text-size);
+  color: var(--text-color);
+  margin-right: 2vw;
+}
+
+#home-page-sub-tab {
+  text-transform: none;
+  font-family: BalooRegular;
+  font-size: var(--text-size);
+}
+
+.MuiTabs-flexContainer {
+  justify-content: space-between;
+}
+
+.Mui-selected {
+  color: white;
+}
+
+.MuiTabs-root {
+  min-height: fit-content !important;
+}
+
+.home-page-app-bar {
+  border-radius: 10vh;
+  background-color: #cccccc !important;
+  box-shadow: none !important;
+  width: fit-content !important;
+  margin: auto !important;
+  position: static !important;
+}
+
+#home-page-bottom {
+  position: fixed;
+  width: 100%;
+  bottom: 3vh;
+}

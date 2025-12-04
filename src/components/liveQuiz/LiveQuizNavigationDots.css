@@ -1,0 +1,20 @@
+.dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  margin-right: 5px;
+  border: 1px solid #cccccc;
+}
+
+.dot.actived {
+  background-color: #cccccc;
+}
+
+.dot.correct {
+  background-color: #83c327;
+}
+
+.dot.incorrect {
+  background-color: #f22a55;
+}
